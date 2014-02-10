@@ -1,0 +1,92 @@
+#!/bin/bash
+
+UMASK=`umask`
+umask 0022
+ 
+read oldrev newrev refname
+ 
+REPOSITORY="$(pwd | sed 's/\/hooks//')"
+BRANCH=$( echo "${refname}" | sed -n 's!^refs/heads/!!p' )
+ENVIRONMENT_BASE="/etc/puppetlabs/environments"
+ 
+# master branch, as defined by git, is production
+if [[ "${BRANCH}" == "master" ]]; then
+    ACTUAL_BRANCH="production"
+else
+    ACTUAL_BRANCH=${BRANCH}
+fi
+
+MODULES="${ENVIRONMENT_BASE}/${ACTUAL_BRANCH}/modules-custom"
+MODULE_NAME="$(echo ${REPOSITORY} | awk -F'/' '{print $4}' | sed 's/.git//')"
+MODULE_DIR="${MODULES}/${MODULE_NAME}"
+
+echo "---------------------------------------------------"
+echo "PWD=$(pwd):${PWD}"
+echo "GIT_DIR=${GIT_DIR}"
+echo "ID=$(id):${ID}"
+echo "REPOSITORY=${REPOSITORY}"
+echo "BRANCH=${BRANCH}"
+echo "ENVIRONMENT_BASE=${ENVIRONMENT_BASE}"
+echo "MODULES=${MODULES}"
+echo "MODULE_NAME=${MODULE_NAME}"
+echo "MODULE_DIR=${MODULE_DIR}"
+echo "---------------------------------------------------"
+
+# echo "---------------------------------------------------"
+# echo "DEBUG MESSAGE:"
+# echo "===="
+# echo "Deleting remote branch ${MODULE_DIR}"
+# echo "You'll do it by hand ;)"
+# echo "rm -rf ${MODULE_DIR}"
+# echo "===="
+# echo "Updating remote branch (${ACTUAL_BRANCH}) ${MODULE_DIR}"
+# echo "  =="
+# echo "  cd ${MODULE_DIR}; git fetch --all; git reset --hard origin/${BRANCH}"
+# echo "  =="
+# echo "  WARNING: ${MODULE_DIR} doesn't exist"
+# echo "  Please run manualy first checkout:"
+# echo "  cd ${MODULES}"
+# echo "  git clone ${REPOSITORY} ${ACTUAL_BRANCH} --branch ${BRANCH}"
+# echo "---------------------------------------------------"
+
+# newrev is a bunch of 0s
+echo "${newrev}" | grep -qs '^0*$'
+if [ "$?" -eq "0" ]; then
+    # branch is marked for deletion
+    if [ "${ACTUAL_BRANCH}" = "production" ]; then
+        echo "FATAL: Automatic deletion in production environment is disabled."
+        exit 1
+    fi
+    echo "Deleting remote branch ${MODULE_DIR}"
+    echo "You'll do it by hand ;)"
+    echo "rm -rf ${MODULE_DIR}"
+else
+    echo "Updating remote branch (${ACTUAL_BRANCH}) ${MODULE_DIR}"
+    if [ -d "${MODULE_DIR}" ]; then
+	echo "---------------------------------------------------"
+	echo "Iussed commands:"
+        echo "  cd ${MODULE_DIR}; git fetch --all; git reset --hard origin/${BRANCH}"
+	echo "---------------------------------------------------"
+        cd ${MODULE_DIR}
+	unset GIT_DIR
+	git fetch --all
+	git reset --hard origin/${BRANCH}
+	exec git-update-server-info
+    else
+        if [ "${ACTUAL_BRANCH}" = "production" ]; then
+	    echo "FATAL: Automatic deploy in production environment is disabled."
+	    exit 1
+	fi
+	echo "---------------------------------------------------"
+	echo "WARNING: ${MODULE_DIR} doesn't exist"
+	echo "Iussed commands:"
+	echo "  cd ${MODULES}"
+        echo "  git clone ${REPOSITORY} ${MODULE_NAME} --branch ${BRANCH}"
+	echo "---------------------------------------------------"
+	cd ${MODULES}
+	git clone ${REPOSITORY} ${MODULE_NAME} --branch ${BRANCH}
+    fi
+fi
+
+umask $UMASK
+exit 0
