@@ -26,7 +26,7 @@ if [[ "${BRANCH}" == "master" ]]; then
 		git fetch --all
 		git reset --hard origin/${BRANCH}
 		exec git-update-server-info
-		${IPT_SAVE} > iptables.rules.${NOW}
+		${IPT_SAVE} > ${SSFIREWALL}/iptables.rules.${NOW}
 		/bin/bash ${SSFIREWALL}/iptables-host-basic.sh
 	else
 		echo "FATAL: directory ${SSFIREWALL} douen't exist."
