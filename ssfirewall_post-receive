@@ -16,19 +16,15 @@ NOW=$(date +%Y%m%d%H%M%S)
 if [[ "${BRANCH}" == "master" ]]; then
     echo "Updating ${SSFIREWALL}"
     if [ -d "${SSFIREWALL}" ]; then
-		echo "---------------------------------------------------"
-		echo "Iussed commands:"
-		echo "  cd ${SSFIREWALL}; git fetch --all; git reset --hard origin/${BRANCH}"
-		echo "  ${IPT_SAVE} > ${SSFIREWALL}/iptables.rules.${NOW}"
-		echo "  /bin/bash ${SSFIREWALL}/iptables-host-basic.sh"
-		echo "---------------------------------------------------"
-		cd ${SSFIREWALL}
-		unset GIT_DIR
-		git fetch --all
-		git reset --hard origin/${BRANCH}
-		exec git-update-server-info
-		sudo ${IPT_SAVE} > ${SSFIREWALL}/iptables.rules.${NOW}
-		sudo /bin/bash ${SSFIREWALL}/iptables-host-basic.sh
+	    set +x
+	    cd ${SSFIREWALL}
+	    unset GIT_DIR
+	    git fetch --all
+	    git reset --hard origin/${BRANCH}
+	    exec git-update-server-info
+	    sudo ${IPT_SAVE} > ${SSFIREWALL}/iptables.rules.${NOW}
+	    sudo /bin/bash ${SSFIREWALL}/iptables-host-basic.sh
+	    set -x
 	else
 		echo "FATAL: directory ${SSFIREWALL} douen't exist."
 		exit 1
