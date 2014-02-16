@@ -11,6 +11,7 @@ SSFIREWALL=/etc/ssfirewall
 
 IPT_SAVE=/sbin/iptables-save
 NOW=$(date +%Y%m%d%H%M%S)
+
 # master branch, as defined by git, is production
 if [[ "${BRANCH}" == "master" ]]; then
     echo "Updating ${SSFIREWALL}"
@@ -18,7 +19,7 @@ if [[ "${BRANCH}" == "master" ]]; then
 		echo "---------------------------------------------------"
 		echo "Iussed commands:"
 		echo "  cd ${SSFIREWALL}; git fetch --all; git reset --hard origin/${BRANCH}"
-		echo "  ${IPT_SAVE} > iptables.rules.${NOW}"
+		echo "  ${IPT_SAVE} > ${SSFIREWALL}/iptables.rules.${NOW}"
 		echo "  /bin/bash ${SSFIREWALL}/iptables-host-basic.sh"
 		echo "---------------------------------------------------"
 		cd ${SSFIREWALL}
@@ -30,6 +31,7 @@ if [[ "${BRANCH}" == "master" ]]; then
 		/bin/bash ${SSFIREWALL}/iptables-host-basic.sh
 	else
 		echo "FATAL: directory ${SSFIREWALL} douen't exist."
+		exit 1
 	fi
 fi
 
