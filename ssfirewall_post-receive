@@ -1,0 +1,31 @@
+#!/bin/bash
+
+UMASK=`umask`
+umask 0022
+ 
+read oldrev newrev refname
+ 
+REPOSITORY="$(pwd | sed 's/\/hooks//')"
+BRANCH=$( echo "${refname}" | sed -n 's!^refs/heads/!!p' )
+SSFIREWALL=/etc/ssfirewall
+
+# master branch, as defined by git, is production
+if [[ "${BRANCH}" == "master" ]]; then
+    echo "Updating ${SSFIREWALL}"
+    if [ -d "${SSFIREWALL}" ]; then
+		echo "---------------------------------------------------"
+		echo "Iussed commands:"
+		echo "  cd ${SSFIREWALL}; git fetch --all; git reset --hard origin/${BRANCH}"
+		echo "---------------------------------------------------"
+		cd ${SSFIREWALL}
+		unset GIT_DIR
+		git fetch --all
+		git reset --hard origin/${BRANCH}
+		exec git-update-server-info
+	else
+		echo "FATAL: directory ${SSFIREWALL} douen't exist."
+	fi
+fi
+
+umask $UMASK
+exit 0
