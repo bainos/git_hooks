@@ -13,7 +13,7 @@ IPT_SAVE=/sbin/iptables-save
 NOW=$(date +%Y%m%d%H%M%S)
 
 # master branch, as defined by git, is production
-if [[ "${BRANCH}" == "master" ]]; then
+#if [[ "${BRANCH}" == "master" ]]; then
     echo "Updating ${SSFIREWALL}"
     if [ -d "${SSFIREWALL}" ]; then
 	    set -x
@@ -29,7 +29,7 @@ if [[ "${BRANCH}" == "master" ]]; then
 		echo "FATAL: directory ${SSFIREWALL} douen't exist."
 		exit 1
 	fi
-fi
+#fi
 
 umask $UMASK
 exit 0
